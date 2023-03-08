@@ -236,7 +236,7 @@ mixin FutureHandlerProviderElementMixin<T>
   /// Might be invokved after the element is disposed in the case where `provider.future`
   /// has yet to complete.
   @internal
-  void onData(AsyncData<T> value, {bool seamless = false}) {
+  void onData(AsyncData<T> value, {bool seamless = true}) {
     if (mounted) {
       asyncTransition(value, seamless: seamless);
     }
