@@ -12,7 +12,9 @@ import 'templates/class_based_provider.dart';
 import 'templates/family.dart';
 import 'templates/functional_provider.dart';
 
-const riverpodTypeChecker = TypeChecker.fromRuntime(Riverpod);
+const riverpodTypeChecker = TypeChecker.fromUrl(
+  'package:riverpod_annotation/src/riverpod_annotation.dart#Riverpod',
+);
 
 String providerDocFor(Element element) {
   return element.documentationComment == null

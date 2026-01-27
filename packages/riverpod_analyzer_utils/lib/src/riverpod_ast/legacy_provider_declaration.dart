@@ -99,7 +99,7 @@ class LegacyProviderDeclaration extends RiverpodAst
     VariableDeclaration node,
     _ParseRefInvocationMixin parent,
   ) {
-    final element = node.declaredElement;
+    final element = node.declaredFragment?.element;
     if (element == null) return null;
 
     final providerElement = LegacyProviderDeclarationElement.parse(element);
@@ -115,7 +115,7 @@ class LegacyProviderDeclaration extends RiverpodAst
       // Provider((ref) => ...)
 
       arguments = initializer.argumentList;
-      provider = initializer.constructorName.type.name2;
+      provider = initializer.constructorName.type.name;
       typeArguments = initializer.constructorName.type.typeArguments;
     } else if (initializer is FunctionExpressionInvocation) {
       // Provider.modifier()

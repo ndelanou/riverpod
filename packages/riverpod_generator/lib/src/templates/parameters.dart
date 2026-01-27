@@ -1,7 +1,7 @@
 import 'package:analyzer/dart/element/element.dart';
 
 String buildParamDefinitionQuery(
-  List<ParameterElement> parameters, {
+  List<FormalParameterElement> parameters, {
   bool asThisParameter = false,
   bool asSuperParameter = false,
   bool writeBrackets = true,
@@ -23,7 +23,7 @@ String buildParamDefinitionQuery(
       .toList();
 
   final buffer = StringBuffer();
-  String encodeParameter(ParameterElement e) {
+  String encodeParameter(FormalParameterElement e) {
     final leading = e.isRequiredNamed || asRequiredNamed ? 'required ' : '';
     final trailing = e.defaultValueCode != null && !asRequiredNamed
         ? '= ${e.defaultValueCode}'
@@ -53,7 +53,7 @@ String buildParamDefinitionQuery(
 }
 
 String buildParamInvocationQuery(
-  Map<ParameterElement, String> parameters, {
+  Map<FormalParameterElement, String> parameters, {
   bool asThisParameter = false,
 }) {
   final buffer = StringBuffer();

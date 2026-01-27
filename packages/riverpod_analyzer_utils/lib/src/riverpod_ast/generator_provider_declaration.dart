@@ -17,8 +17,8 @@ extension on LibraryElement {
     String name, {
     required String packageName,
   }) {
-    return library.importedLibraries
-        .map((e) => e.exportNamespace.get(name))
+    return library.firstFragment.importedLibraries
+        .map((e) => e.exportNamespace.get2(name))
         .firstWhereOrNull(
           // TODO find a way to test this
           (element) => element != null && isFromRiverpod.isExactly(element),
@@ -193,7 +193,7 @@ class ClassBasedProviderDeclaration extends GeneratorProviderDeclaration {
     ClassDeclaration node,
     _ParseRefInvocationMixin parent,
   ) {
-    final element = node.declaredElement;
+    final element = node.declaredFragment?.element;
     if (element == null) return null;
     final riverpodAnnotation = RiverpodAnnotation._parse(node);
     if (riverpodAnnotation == null) return null;
@@ -322,7 +322,7 @@ class FunctionalProviderDeclaration extends GeneratorProviderDeclaration {
     FunctionDeclaration node,
     _ParseRefInvocationMixin parent,
   ) {
-    final element = node.declaredElement;
+    final element = node.declaredFragment?.element;
     if (element == null) return null;
     final riverpodAnnotation = RiverpodAnnotation._parse(node);
     if (riverpodAnnotation == null) return null;

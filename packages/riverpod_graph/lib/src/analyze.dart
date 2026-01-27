@@ -34,16 +34,19 @@ Future<void> analyze(
       final unit = await context.currentSession.getResolvedLibrary(filePath);
       if (unit is! ResolvedLibraryResult) continue;
 
+      // Get all top level elements
+      final library = unit.element;
+
       // List of all the providers of the current file that are either top level
       // element or static element of classes.
-      final providers = unit.element.topLevelElements
-          .expand(
-            (element) => element is ClassElement
-                ? element.fields.where((e) => e.isStatic).toList()
-                : [element],
-          )
-          .whereType<VariableElement>()
-          .where(
+      final allElements = <Element>[
+        ...library.topLevelVariables,
+        ...library.classes.expand(
+          (classElement) => classElement.fields.where((e) => e.isStatic),
+        ),
+      ];
+
+      final providers = allElements.whereType<VariableElement>().where(
         (variableElement) {
           if (variableElement.type.element?.isFromRiverpod ?? false) {
             return true;
@@ -54,24 +57,23 @@ Future<void> analyze(
 
       // List of all the consumer widgets of the current file that are either
       // top level element or static element of classes.
-      final consumerWidgets =
-          unit.element.topLevelElements.whereType<ClassElement>().where(
-                (element) =>
-                    const {
-                      'ConsumerWidget',
-                      'ConsumerStatefulWidget',
-                      'HookConsumerWidget',
-                    }.contains(element.supertype?.element.name) &&
-                    (element.supertype?.element.isFromRiverpod ?? false),
-              );
+      final consumerWidgets = library.classes.where(
+        (element) =>
+            const {
+              'ConsumerWidget',
+              'ConsumerStatefulWidget',
+              'HookConsumerWidget',
+            }.contains(element.supertype?.element.name) &&
+            (element.supertype?.element.isFromRiverpod ?? false),
+      );
 
       for (final consumer in consumerWidgets) {
-        final ast = unit.getElementDeclaration(consumer)?.node;
+        final ast = unit.getFragmentDeclaration(consumer.firstFragment)?.node;
         ast?.visitChildren(ConsumerWidgetVisitor(consumer));
       }
 
       for (final provider in providers.toList()) {
-        final ast = unit.getElementDeclaration(provider)?.node;
+        final ast = unit.getFragmentDeclaration(provider.firstFragment)?.node;
         ast?.visitChildren(
           ProviderDependencyVisitor(
             provider: provider,
@@ -449,11 +451,10 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
           // ```dart
           // final providerSimpleIdentifier = Provider(myMethod);
           // ```
-          if (firstArgument.staticElement != null) {
+          final element = firstArgument.element;
+          if (element != null) {
             final functionDeclaration = unit
-                .getElementDeclaration(
-                  firstArgument.staticElement!,
-                )
+                .getFragmentDeclaration(element.firstFragment)
                 ?.node;
             if (functionDeclaration is FunctionDeclaration) {
               // Instead of continuing with the current node, we visit the one of
@@ -467,12 +468,11 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
           // ```dart
           // final providerConstructorReference = Provider(MyClass.new);
           // ```
-          if (firstArgument.constructorName.staticElement != null) {
+          final constructorElement = firstArgument.constructorName.element;
+          if (constructorElement != null) {
+            final returnElement = constructorElement.returnType.element;
             final classDeclaration = unit
-                .getElementDeclaration(
-                  firstArgument
-                      .constructorName.staticElement!.returnType.element,
-                )
+                .getFragmentDeclaration(returnElement.firstFragment)
                 ?.node;
             if (classDeclaration is ClassDeclaration) {
               // firstWhereOrNull required if a class was created with .new
@@ -490,15 +490,36 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
           }
         }
       }
-    } else if (node.parent is SuperConstructorInvocation) {
+    } else if (node.parent is SuperConstructorInvocation ||
+        node.parent is RedirectingConstructorInvocation) {
       // We might be visiting a family provider.
       // super(
       //   (ref) => family(ref, i),
       // );
-      if ((node.parent! as SuperConstructorInvocation)
-              .staticElement
-              ?.isFromRiverpod ??
-          false) {
+      // Or a redirecting constructor:
+      // this._internal(
+      //   (ref) => family(ref, i),
+      // );
+      final Element? constructorElement;
+      bool isFromRiverpodOrExtendsRiverpod = false;
+
+      if (node.parent is SuperConstructorInvocation) {
+        constructorElement =
+            (node.parent! as SuperConstructorInvocation).element;
+        isFromRiverpodOrExtendsRiverpod =
+            constructorElement?.isFromRiverpod ?? false;
+      } else {
+        constructorElement =
+            (node.parent! as RedirectingConstructorInvocation).element;
+        // For redirecting constructors, check if the enclosing class extends riverpod
+        final enclosingClass = constructorElement?.enclosingElement;
+        if (enclosingClass is InterfaceElement) {
+          isFromRiverpodOrExtendsRiverpod =
+              enclosingClass.allSupertypes.any((t) => t.element.isFromRiverpod);
+        }
+      }
+
+      if (isFromRiverpodOrExtendsRiverpod) {
         final firstArgument = node.arguments.firstWhere(
           (argument) => argument is! NamedExpression,
         );
@@ -514,11 +535,10 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
             // String family(ref, int i) => 'Hello World';
             // ```
             // We now want to visit its declaration.
-            final methodDeclaration = unit
-                .getElementDeclaration(
-                  bodyExpression.methodName.staticElement!,
-                )
-                ?.node;
+            final methodElement = bodyExpression.methodName.element;
+            final methodDeclaration = methodElement != null
+                ? unit.getFragmentDeclaration(methodElement.firstFragment)?.node
+                : null;
             return methodDeclaration?.visitChildren(this);
           } else {
             // We need to check whether we are visiting a family provider
@@ -540,7 +560,7 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
                 final classType =
                     bodyExpression.target.staticType! as InterfaceType;
                 if (classType.methods.any(
-                  (method) => method.name == 'build' && method.hasOverride,
+                  (method) => method.name == 'build' && method.metadata.hasOverride,
                 )) {
                   // The logic is implemented in an overridden `build` method.
                   // ```dart
@@ -552,9 +572,7 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
                     (method) => method.name == 'build',
                   );
                   final methodDeclaration = unit
-                      .getElementDeclaration(
-                        buildMethod,
-                      )
+                      .getFragmentDeclaration(buildMethod.firstFragment)
                       ?.node;
                   if (methodDeclaration != null) {
                     return methodDeclaration.visitChildren(this);
@@ -590,10 +608,13 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
         // This case is handled by the `visitArgumentList` method.
         final callMethod =
             methods.firstWhere((method) => method.name == 'call');
+        // In analyzer 8.0, unnamed constructors have name 'new' instead of ''
+        bool isUnnamedConstructor(ConstructorElement c) =>
+            c.name == '' || c.name == 'new';
         if (callMethod.returnType is InterfaceType &&
-            (callMethod.returnType as InterfaceType).constructors.any(
-                  (constructor) => constructor.name == '',
-                )) {
+            (callMethod.returnType as InterfaceType)
+                .constructors
+                .any(isUnnamedConstructor)) {
           // The `call` method's returned type is generated provider class.
           //
           // The unnamed constructor calls the super constructor, with
@@ -603,11 +624,11 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
           // );
           // ```
           final unnamedConstructorElement =
-              (callMethod.returnType as InterfaceType).constructors.firstWhere(
-                    (constructor) => constructor.name == '',
-                  );
+              (callMethod.returnType as InterfaceType)
+                  .constructors
+                  .firstWhere(isUnnamedConstructor);
           final newNode =
-              unit.getElementDeclaration(unnamedConstructorElement)?.node;
+              unit.getFragmentDeclaration(unnamedConstructorElement.firstFragment)?.node;
           // We visit the node of the unnamed constructor and continue in
           // `visitArgumentList`.
           return newNode?.visitChildren(this);
@@ -682,8 +703,8 @@ class _ProviderName {
 
 /// Returns the name of the provider.
 _ProviderName _displayNameForProvider(VariableElement provider) {
-  final providerName = provider.name;
-  final enclosingElementName = provider.enclosingElement3?.displayName;
+  final providerName = provider.name ?? '';
+  final enclosingElementName = provider.enclosingElement?.displayName;
   return _ProviderName(
     providerName: providerName,
     enclosingElementName: enclosingElementName ?? '',
@@ -717,29 +738,29 @@ VariableElement parseProviderFromExpression(
   Expression providerExpression,
 ) {
   if (providerExpression is PropertyAccess) {
-    final staticElement = providerExpression.propertyName.staticElement;
-    if (staticElement is PropertyAccessorElement &&
-        !staticElement.library.isFromRiverpod) {
+    final element = providerExpression.propertyName.element;
+    if (element is PropertyAccessorElement &&
+        !element.library.isFromRiverpod) {
       // watch(SampleClass.familyProviders(id))
-      return staticElement.declaration.variable2!;
+      return element.baseElement.variable;
     }
     final target = providerExpression.realTarget;
     return parseProviderFromExpression(target);
   } else if (providerExpression is PrefixedIdentifier) {
     if (providerExpression.name.isStartedUpperCaseLetter) {
       // watch(SomeClass.provider)
-      final Object? staticElement = providerExpression.staticElement;
-      if (staticElement is PropertyAccessorElement) {
-        return staticElement.declaration.variable2!;
+      final Object? element = providerExpression.element;
+      if (element is PropertyAccessorElement) {
+        return element.baseElement.variable;
       }
     }
     // watch(provider.modifier)
     return parseProviderFromExpression(providerExpression.prefix);
   } else if (providerExpression is Identifier) {
     // watch(variable)
-    final Object? staticElement = providerExpression.staticElement;
-    if (staticElement is PropertyAccessorElement) {
-      return staticElement.declaration.variable2!;
+    final Object? element = providerExpression.element;
+    if (element is PropertyAccessorElement) {
+      return element.baseElement.variable;
     }
   } else if (providerExpression is FunctionExpressionInvocation) {
     // watch(family(id))
@@ -758,12 +779,12 @@ VariableElement parseProviderFromExpression(
 extension on Element {
   /// Returns `true` if an element is defined in one of the riverpod packages.
   bool get isFromRiverpod {
-    return source?.uri.scheme == 'package' &&
+    return library?.uri.scheme == 'package' &&
         const {
           'riverpod',
           'flutter_riverpod',
           'hooks_riverpod',
-        }.contains(source?.uri.pathSegments.firstOrNull);
+        }.contains(library?.uri.pathSegments.firstOrNull);
   }
 }
 

@@ -32,7 +32,7 @@ class ProtectedNotifierProperties extends DartLintRule {
 
       final enclosingClass = propertyAccess
           .thisOrAncestorOfType<ClassDeclaration>()
-          ?.declaredElement;
+          ?.declaredFragment?.element;
       if (enclosingClass == null) return;
 
       final isAnnotatedWithRiverpod =

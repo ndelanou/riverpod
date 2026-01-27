@@ -15,7 +15,7 @@ class ResolvedRiverpodLibraryResult extends RiverpodAst {
       for (final unit in units) {
         // Let's not parse generated files
         const generatedExtensions = {'.freezed.dart', '.g.dart'};
-        final shortName = unit.declaredElement?.source.shortName ?? '';
+        final shortName = unit.declaredFragment?.source.shortName ?? '';
         if (generatedExtensions.any(shortName.endsWith)) {
           continue;
         }

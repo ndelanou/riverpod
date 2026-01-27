@@ -30,8 +30,8 @@ class MissingProviderScope extends DartLintRule {
       if (!node.methodName.isFlutterRunApp) return;
       final function = node.function;
       if (function is! SimpleIdentifier) return;
-      final functionElement = function.staticElement;
-      if (functionElement is! FunctionElement) return;
+      final functionElement = function.element;
+      if (functionElement is! TopLevelFunctionElement) return;
 
       // runApp call detected, now checking if if the first widget is a ProviderScope
       final firstArgument = node.argumentList.arguments.firstOrNull?.staticType;

@@ -50,6 +50,8 @@ flowchart TB
     Provider[[provider]];
   end
 
+  marvelTearOffConsumer[["marvelTearOffConsumer"]];
+  marvelRefdProvider[["marvelRefdProvider"]];
   additionProvider[["additionProvider"]];
   normalProvider[["normalProvider"]];
   futureProvider[["futureProvider"]];
@@ -71,9 +73,8 @@ flowchart TB
   subgraph SampleClass
     SampleClass.selectedProvider[["selectedProvider"]];
   end
-  marvelTearOffConsumer[["marvelTearOffConsumer"]];
-  marvelRefdProvider[["marvelRefdProvider"]];
 
+  marvelRefdProvider -.-> marvelTearOffConsumer;
   normalProvider ==> additionProvider;
   futureProvider ==> additionProvider;
   familyProviders ==> additionProvider;
@@ -83,8 +84,7 @@ flowchart TB
   SampleClass.futureProvider ==> additionProvider;
   SampleClass.familyProviders ==> additionProvider;
   SampleClass.functionProvider ==> additionProvider;
-  SampleClass.selectedProvider ==> additionProvider;
-  marvelRefdProvider -.-> marvelTearOffConsumer;''',
+  SampleClass.selectedProvider ==> additionProvider;''',
         reason: 'It should log the riverpod graph',
       );
       await process.shouldExit(0);
@@ -137,6 +137,12 @@ Legend: {
   }
 }
 
+marvelTearOffConsumer: "marvelTearOffConsumer"
+marvelTearOffConsumer.shape: rectangle
+marvelTearOffConsumer.tooltip: "read/watch/listen seem to be required to bring this in scope for analysis"
+marvelRefdProvider: "marvelRefdProvider"
+marvelRefdProvider.shape: rectangle
+marvelRefdProvider.tooltip: "taken from the marvel example"
 additionProvider: "additionProvider"
 additionProvider.shape: rectangle
 additionProvider.tooltip: "A provider returning the sum of the other providers."
@@ -170,13 +176,8 @@ SampleClass.functionProvider.tooltip: "A provider returning a function that retu
 SampleClass.selectedProvider: "SampleClass.selectedProvider"
 SampleClass.selectedProvider.shape: rectangle
 SampleClass.selectedProvider.tooltip: "A provider returning a number that will be selected."
-marvelTearOffConsumer: "marvelTearOffConsumer"
-marvelTearOffConsumer.shape: rectangle
-marvelTearOffConsumer.tooltip: "read/watch/listen seem to be required to bring this in scope for analysis"
-marvelRefdProvider: "marvelRefdProvider"
-marvelRefdProvider.shape: rectangle
-marvelRefdProvider.tooltip: "taken from the marvel example"
 
+marvelRefdProvider -> marvelTearOffConsumer: {style.stroke-dash: 4}
 normalProvider -> additionProvider: {style.stroke-width: 4}
 futureProvider -> additionProvider: {style.stroke-width: 4}
 familyProviders -> additionProvider: {style.stroke-width: 4}
@@ -186,8 +187,7 @@ SampleClass.normalProvider -> additionProvider: {style.stroke-width: 4}
 SampleClass.futureProvider -> additionProvider: {style.stroke-width: 4}
 SampleClass.familyProviders -> additionProvider: {style.stroke-width: 4}
 SampleClass.functionProvider -> additionProvider: {style.stroke-width: 4}
-SampleClass.selectedProvider -> additionProvider: {style.stroke-width: 4}
-marvelRefdProvider -> marvelTearOffConsumer: {style.stroke-dash: 4}''',
+SampleClass.selectedProvider -> additionProvider: {style.stroke-width: 4}''',
         reason: 'It should log the riverpod graph',
       );
       await process.shouldExit(0);

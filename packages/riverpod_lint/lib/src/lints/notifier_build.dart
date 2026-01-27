@@ -43,7 +43,7 @@ class NotifierBuild extends RiverpodLintRule {
       if (!hasRiverpodAnnotation) return;
 
       final hasBuildMethod = node.members
-          .where((e) => e.declaredElement?.displayName == _buildMethodName)
+          .where((e) => e.declaredFragment?.element.displayName == _buildMethodName)
           .isNotEmpty;
 
       if (hasBuildMethod) return;

@@ -77,15 +77,16 @@ class FamilyTemplate extends Template {
       }
     }
 
-    final parameters =
-        provider.node.functionExpression.parameters!.parameterElements
-            // ignore: deprecated_member_use, stuck with SDK >=2.x.0 for now
-            .whereNotNull()
-            .skip(1)
-            .toList();
+    final parameters = provider.node.functionExpression.parameters!
+        .parameterFragments
+        .map((f) => f?.element)
+        // ignore: deprecated_member_use, stuck with SDK >=2.17.0 for now
+        .whereNotNull()
+        .skip(1)
+        .toList();
 
     final parametersPassThrough = buildParamInvocationQuery({
-      for (final parameter in parameters) parameter: parameter.name,
+      for (final parameter in parameters) parameter: parameter.name!,
     });
 
     return FamilyTemplate._(
@@ -156,8 +157,9 @@ ${parameters.map((e) => '        ${e.name}: ${e.name},\n').join()}
       }
     }
 
-    final parameters = provider.buildMethod.parameters!.parameterElements
-        // ignore: deprecated_member_use, stuck with SDK >=2.x.0 for now
+    final parameters = provider.buildMethod.parameters!.parameterFragments
+        .map((f) => f?.element)
+        // ignore: deprecated_member_use, stuck with SDK >=2.17.0 for now
         .whereNotNull()
         .toList();
     final parameterDefinition = buildParamDefinitionQuery(parameters);
@@ -165,7 +167,7 @@ ${parameters.map((e) => '        ${e.name}: ${e.name},\n').join()}
         parameters.map((e) => '..${e.name} = ${e.name}').join('\n');
 
     final parametersPassThrough = buildParamInvocationQuery({
-      for (final parameter in parameters) parameter: parameter.name,
+      for (final parameter in parameters) parameter: parameter.name!,
     });
 
     return FamilyTemplate._(
@@ -215,7 +217,7 @@ ${parameters.map((e) => '        ${e.name}: ${e.name},\n').join()}
   }
 
   final GeneratorProviderDeclaration provider;
-  final List<ParameterElement> parameters;
+  final List<FormalParameterElement> parameters;
   final BuildYamlOptions options;
   final String refType;
   final String elementType;

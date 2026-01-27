@@ -20,9 +20,12 @@ abstract class ParserGenerator<AnnotationT>
   ) async {
     final firstAnnotatedElementFromUniqueSource = <Uri, Element>{};
 
-    for (final annotated in library.annotatedWithExact(typeChecker)) {
+    for (final annotated in library.annotatedWithExact(
+      typeChecker,
+      throwOnUnresolved: false,
+    )) {
       firstAnnotatedElementFromUniqueSource.putIfAbsent(
-        annotated.element.source!.uri,
+        annotated.element.library!.uri,
         () => annotated.element,
       );
     }
@@ -30,7 +33,7 @@ abstract class ParserGenerator<AnnotationT>
     final ast = await Future.wait(
       firstAnnotatedElementFromUniqueSource.values.map(
         (e) => buildStep.resolver
-            .astNodeFor(e, resolve: true)
+            .astNodeFor(e.firstFragment, resolve: true)
             .then((value) => value!.root as CompilationUnit),
       ),
     );
@@ -47,7 +50,7 @@ abstract class ParserGenerator<AnnotationT>
     BuildStep buildStep,
   ) async* {
     final ast = await buildStep.resolver
-        .astNodeFor(element, resolve: true)
+        .astNodeFor(element.firstFragment, resolve: true)
         .then((value) => value?.root);
 
     ast as CompilationUnit?;

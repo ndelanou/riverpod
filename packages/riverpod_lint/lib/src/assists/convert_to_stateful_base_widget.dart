@@ -99,18 +99,18 @@ class ConvertToStatefulBaseWidget extends RiverpodAssist {
       for (final member in widgetClass.members) {
         if (member is FieldDeclaration && !member.isStatic) {
           for (final fieldNode in member.fields.variables) {
-            final fieldElement = fieldNode.declaredElement as FieldElement?;
-            if (fieldElement == null) continue;
-            if (!fieldsAssignedInConstructors.contains(fieldElement)) {
+            final element = fieldNode.declaredFragment?.element;
+            if (element is! FieldElement) continue;
+            if (!fieldsAssignedInConstructors.contains(element)) {
               nodesToMove.add(member);
-              elementsToMove.add(fieldElement);
+              elementsToMove.add(element);
 
-              final getter = fieldElement.getter;
+              final getter = element.getter;
               if (getter != null) {
                 elementsToMove.add(getter);
               }
 
-              final setter = fieldElement.setter;
+              final setter = element.setter;
               if (setter != null) {
                 elementsToMove.add(setter);
               }
@@ -118,13 +118,13 @@ class ConvertToStatefulBaseWidget extends RiverpodAssist {
           }
         } else if (member is MethodDeclaration && !member.isStatic) {
           nodesToMove.add(member);
-          elementsToMove.add(member.declaredElement!);
+          elementsToMove.add(member.declaredFragment!.element);
         }
       }
 
       for (final node in nodesToMove) {
         final visitor = _ReplacementEditBuilder(
-          widgetClass.declaredElement!,
+          widgetClass.declaredFragment!.element,
           elementsToMove,
           builder,
         );
@@ -242,7 +242,7 @@ class _FieldFinder extends RecursiveAstVisitor<void> {
 
   @override
   void visitFieldFormalParameter(FieldFormalParameter node) {
-    final element = node.declaredElement;
+    final element = node.declaredFragment?.element;
     if (element is FieldFormalParameterElement) {
       final field = element.field;
       if (field != null) {
@@ -256,7 +256,7 @@ class _FieldFinder extends RecursiveAstVisitor<void> {
   @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
     if (node.parent is ConstructorFieldInitializer) {
-      final element = node.staticElement;
+      final element = node.element;
       if (element is FieldElement) {
         fieldsAssignedInConstructors.add(element);
       }
@@ -264,7 +264,7 @@ class _FieldFinder extends RecursiveAstVisitor<void> {
     if (node.inSetterContext()) {
       final element = node.writeOrReadElement;
       if (element is PropertyAccessorElement) {
-        final field = element.variable2;
+        final field = element.variable;
         if (field is FieldElement) {
           fieldsAssignedInConstructors.add(field);
         }
@@ -289,9 +289,9 @@ class _ReplacementEditBuilder extends RecursiveAstVisitor<void> {
     if (node.inDeclarationContext()) {
       return;
     }
-    final element = node.staticElement;
+    final element = node.element;
     if (element is ExecutableElement &&
-        element.enclosingElement3 == widgetClassElement &&
+        element.enclosingElement == widgetClassElement &&
         !elementsToMove.contains(element)) {
       final offset = node.offset;
       final qualifier =

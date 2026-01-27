@@ -20,7 +20,7 @@ class AvoidPublicNotifierProperties extends DartLintRule {
     CustomLintContext context,
   ) {
     context.registry.addClassDeclaration((node) {
-      final notifierElement = node.declaredElement;
+      final notifierElement = node.declaredFragment?.element;
 
       if (notifierElement == null ||
           !anyNotifierType.isAssignableFromType(notifierElement.thisType)) {
@@ -31,9 +31,9 @@ class AvoidPublicNotifierProperties extends DartLintRule {
         bool isVisibleOutsideTheNotifier(Element? element) {
           return element != null &&
               element.isPublic &&
-              !element.hasProtected &&
-              !element.hasVisibleForOverriding &&
-              !element.hasVisibleForTesting;
+              !element.metadata.hasProtected &&
+              !element.metadata.hasVisibleForOverriding &&
+              !element.metadata.hasVisibleForTesting;
         }
 
         if (member is FieldDeclaration) {
@@ -41,7 +41,7 @@ class AvoidPublicNotifierProperties extends DartLintRule {
           if (member.isStatic) continue;
 
           for (final variable in member.fields.variables) {
-            if (!isVisibleOutsideTheNotifier(variable.declaredElement)) {
+            if (!isVisibleOutsideTheNotifier(variable.declaredFragment?.element)) {
               continue;
             }
 
@@ -50,7 +50,7 @@ class AvoidPublicNotifierProperties extends DartLintRule {
         } else if (member is MethodDeclaration) {
           if (!member.isGetter) continue;
           if (member.isStatic) continue;
-          if (!isVisibleOutsideTheNotifier(member.declaredElement)) continue;
+          if (!isVisibleOutsideTheNotifier(member.declaredFragment?.element)) continue;
 
           reporter.atNode(member, _code);
         }

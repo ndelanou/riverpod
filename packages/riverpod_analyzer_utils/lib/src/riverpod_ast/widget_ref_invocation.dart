@@ -23,10 +23,10 @@ abstract class WidgetRefInvocation extends RiverpodAst
     }
     final function = node.function;
     if (function is! SimpleIdentifier) return null;
-    final functionOwner = function.staticElement
+    final functionOwner = function.element
         .cast<MethodElement>()
-        ?.declaration
-        .enclosingElement3;
+        ?.baseElement
+        .enclosingElement;
 
     if (functionOwner == null ||
         // Since Ref is sealed, checking that the function is from the package:riverpod

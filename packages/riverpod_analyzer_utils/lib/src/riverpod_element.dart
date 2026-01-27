@@ -18,8 +18,12 @@ class RiverpodAnnotationElement {
   @internal
   static RiverpodAnnotationElement? parse(Element element) {
     DartObject? annotation;
+    // ignore: deprecated_member_use
+    if (element is! Annotatable) return null;
+    // ignore: deprecated_member_use
+    final annotatable = element as Annotatable;
     try {
-      annotation = riverpodType.firstAnnotationOfExact(element);
+      annotation = riverpodType.firstAnnotationOfExact(annotatable);
     } catch (_) {
       return RiverpodAnnotationElement(
         keepAlive: false,
@@ -194,11 +198,16 @@ class LegacyProviderDeclarationElement implements ProviderDeclarationElement {
   ) {
     return _cache.putIfAbsent(element, () {
       // Search for @ProviderFor annotation. If present, then this is a generated provider
-      if (providerForType.hasAnnotationOfExact(
-        element,
-        throwOnUnresolved: false,
-      )) {
-        return null;
+      // ignore: deprecated_member_use
+      if (element is Annotatable) {
+        // ignore: deprecated_member_use
+        final annotatable = element as Annotatable;
+        if (providerForType.hasAnnotationOfExact(
+          annotatable,
+          throwOnUnresolved: false,
+        )) {
+          return null;
+        }
       }
 
       bool isAutoDispose;
@@ -210,11 +219,11 @@ class LegacyProviderDeclarationElement implements ProviderDeclarationElement {
 
         providerType = LegacyProviderType._parse(element.type);
       } else if (familyType.isAssignableFromType(element.type)) {
-        final callFn = (element.type as InterfaceType).lookUpMethod2(
+        final callFn = (element.type as InterfaceType).lookUpMethod(
           'call',
           element.library!,
         )!;
-        final parameter = callFn.parameters.single;
+        final parameter = callFn.formalParameters.single;
 
         isAutoDispose = !alwaysAliveProviderListenableType
             .isAssignableFromType(callFn.returnType);
@@ -226,7 +235,7 @@ class LegacyProviderDeclarationElement implements ProviderDeclarationElement {
       }
 
       return LegacyProviderDeclarationElement._(
-        name: element.name,
+        name: element.name!,
         element: element,
         isAutoDispose: isAutoDispose,
         familyElement: familyElement,
@@ -301,7 +310,7 @@ class ClassBasedProviderDeclarationElement
       }
 
       return ClassBasedProviderDeclarationElement._(
-        name: element.name,
+        name: element.name!,
         buildMethod: buildMethod,
         element: element,
         annotation: riverpodAnnotation,
@@ -341,7 +350,7 @@ class FunctionalProviderDeclarationElement
       if (riverpodAnnotation == null) return null;
 
       return FunctionalProviderDeclarationElement._(
-        name: element.name,
+        name: element.name!,
         annotation: riverpodAnnotation,
         element: element,
       );

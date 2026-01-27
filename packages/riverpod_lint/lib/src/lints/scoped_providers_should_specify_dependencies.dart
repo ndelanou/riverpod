@@ -9,7 +9,7 @@ extension SimpleIdentifierX on SimpleIdentifier {
   bool get isFlutterRunApp {
     if (name != 'runApp') return false;
 
-    final library = staticElement?.library;
+    final library = element?.library;
     if (library == null) return false;
     final libraryUri = Uri.tryParse(library.identifier);
     if (libraryUri == null) return false;
@@ -21,7 +21,7 @@ extension SimpleIdentifierX on SimpleIdentifier {
   bool get isPumpWidget {
     if (name != 'pumpWidget') return false;
 
-    final library = staticElement?.library;
+    final library = element?.library;
     if (library == null) return false;
     final libraryUri = Uri.tryParse(library.identifier);
     if (libraryUri == null) return false;

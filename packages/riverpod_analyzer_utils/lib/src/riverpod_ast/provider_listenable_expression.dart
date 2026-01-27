@@ -25,20 +25,20 @@ class ProviderListenableExpression extends RiverpodAst {
       if (expression is SimpleIdentifier) {
         // watch(expression)
         provider = expression;
-        final element = expression.staticElement;
+        final element = expression.element;
         if (element is PropertyAccessorElement) {
           // watch(provider)
           DartObject? annotation;
           try {
             annotation =
-                providerForType.firstAnnotationOfExact(element.variable2!);
+                providerForType.firstAnnotationOfExact(element.variable);
           } catch (_) {
             return;
           }
 
           if (annotation == null) {
             providerElement =
-                LegacyProviderDeclarationElement.parse(element.variable2!);
+                LegacyProviderDeclarationElement.parse(element.variable);
           } else {
             providerElement = _parseGeneratedProviderFromAnnotation(annotation);
           }
@@ -52,7 +52,7 @@ class ProviderListenableExpression extends RiverpodAst {
         parseExpression(expression.target);
       } else if (expression is PrefixedIdentifier) {
         // watch(expression.modifier)
-        final element = expression.prefix.staticElement;
+        final element = expression.prefix.element;
         if (element is PrefixElement) {
           providerPrefix = expression.prefix;
           parseExpression(expression.identifier);

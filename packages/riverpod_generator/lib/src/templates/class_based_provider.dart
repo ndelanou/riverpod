@@ -138,12 +138,12 @@ extension on GeneratorProviderDeclarationElement {
   String providerNameByElementFor(BuildYamlOptions options) {
     final e = this;
     if (e is ClassBasedProviderDeclarationElement) {
-      return e.buildMethod.parameters.isNotEmpty
+      return e.buildMethod.formalParameters.isNotEmpty
           ? providerFamilyNameFor(e, options)
           : providerNameFor(e, options);
     }
     if (e is FunctionalProviderDeclarationElement) {
-      return e.element.parameters.length > 1
+      return e.element.formalParameters.length > 1
           ? providerFamilyNameFor(e, options)
           : providerNameFor(e, options);
     }

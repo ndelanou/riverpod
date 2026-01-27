@@ -50,11 +50,10 @@ class AvoidBuildContextInProviders extends RiverpodLintRule {
     ErrorReporter reporter,
     FormalParameterList parameters,
   ) {
-    final buildContextParameters = parameters.parameters.where(
-      (e) =>
-          e.declaredElement?.type != null &&
-          buildContextType.isExactlyType(e.declaredElement!.type),
-    );
+    final buildContextParameters = parameters.parameters.where((e) {
+      final element = e.declaredFragment?.element;
+      return element?.type != null && buildContextType.isExactlyType(element!.type);
+    });
 
     for (final contextParameter in buildContextParameters) {
       reporter.atNode(contextParameter, _code);

@@ -1,3 +1,4 @@
+import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
 import 'package:riverpod_analyzer_utils/riverpod_analyzer_utils.dart';
@@ -18,8 +19,8 @@ class AvoidGlobalProviderContainer extends DartLintRule {
     CustomLintContext context,
   ) {
     context.registry.addInstanceCreationExpression((node) {
-      // If there is a parameterElement it means we are not declaring a variable
-      if (node.staticParameterElement != null) return;
+      // If there is a parent ArgumentList it means we are passing as an argument
+      if (node.parent is NamedExpression || node.parent is ArgumentList) return;
 
       // Check that the object created is indeed a ProviderContainer
       final type = node.staticType;

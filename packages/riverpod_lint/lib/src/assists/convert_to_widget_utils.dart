@@ -127,7 +127,8 @@ TypeChecker getStatefulBaseType({
 const _stateType = TypeChecker.fromName('State', packageName: 'flutter');
 
 ClassDeclaration? findStateClass(ClassDeclaration widgetClass) {
-  final widgetType = widgetClass.declaredElement?.thisType;
+  final widgetElement = widgetClass.declaredFragment?.element;
+  final widgetType = widgetElement?.thisType;
   if (widgetType == null) return null;
 
   return widgetClass
@@ -154,7 +155,7 @@ ClassDeclaration? findStateClass(ClassDeclaration widgetClass) {
 // Original implemenation in package:analyzer/lib/src/dart/ast/extensions.dart
 extension IdentifierExtension on Identifier {
   Element? get writeOrReadElement {
-    return _writeElement(this) ?? staticElement;
+    return _writeElement(this) ?? element;
   }
 }
 

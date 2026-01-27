@@ -54,7 +54,7 @@ class RiverpodAnnotation extends RiverpodAst {
   static RiverpodAnnotation? _parse(
     Declaration node,
   ) {
-    final annotatedElement = node.declaredElement;
+    final annotatedElement = node.declaredFragment?.element;
     if (annotatedElement == null) return null;
 
     for (final annotation in node.metadata) {
@@ -143,8 +143,8 @@ class RiverpodAnnotation extends RiverpodAst {
           continue;
         }
 
-        final dependencyElement = dependency.staticElement;
-        if (dependencyElement is FunctionElement) {
+        final dependencyElement = dependency.element;
+        if (dependencyElement is TopLevelFunctionElement) {
           final dependencyProvider = FunctionalProviderDeclarationElement.parse(
             dependencyElement,
             annotation: null,
