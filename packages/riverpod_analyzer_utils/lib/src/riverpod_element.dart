@@ -18,12 +18,8 @@ class RiverpodAnnotationElement {
   @internal
   static RiverpodAnnotationElement? parse(Element element) {
     DartObject? annotation;
-    // ignore: deprecated_member_use
-    if (element is! Annotatable) return null;
-    // ignore: deprecated_member_use
-    final annotatable = element as Annotatable;
     try {
-      annotation = riverpodType.firstAnnotationOfExact(annotatable);
+      annotation = riverpodType.firstAnnotationOfExact(element);
     } catch (_) {
       return RiverpodAnnotationElement(
         keepAlive: false,
@@ -198,16 +194,11 @@ class LegacyProviderDeclarationElement implements ProviderDeclarationElement {
   ) {
     return _cache.putIfAbsent(element, () {
       // Search for @ProviderFor annotation. If present, then this is a generated provider
-      // ignore: deprecated_member_use
-      if (element is Annotatable) {
-        // ignore: deprecated_member_use
-        final annotatable = element as Annotatable;
-        if (providerForType.hasAnnotationOfExact(
-          annotatable,
-          throwOnUnresolved: false,
-        )) {
-          return null;
-        }
+      if (providerForType.hasAnnotationOfExact(
+        element,
+        throwOnUnresolved: false,
+      )) {
+        return null;
       }
 
       bool isAutoDispose;
