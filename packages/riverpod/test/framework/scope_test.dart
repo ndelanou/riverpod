@@ -697,9 +697,9 @@ final a = Provider((ref) => 0);
 final b = Provider(
   (ref) => 0,
   dependencies: [
-    // expect-error: LIST_ELEMENT_TYPE_NOT_ASSIGNABLE
+    // expect-error: list_element_type_not_assignable
     42,
-    // expect-error: LIST_ELEMENT_TYPE_NOT_ASSIGNABLE
+    // expect-error: list_element_type_not_assignable
     a.select((value) => 42),
   ],
 );

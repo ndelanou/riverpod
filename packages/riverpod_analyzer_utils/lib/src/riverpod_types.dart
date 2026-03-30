@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
-import 'package:custom_lint_core/custom_lint_core.dart';
+import 'type_checker.dart';
 
 /// TypeChecker for the `ProviderFor` annotation
 const providerForType = TypeChecker.fromName(

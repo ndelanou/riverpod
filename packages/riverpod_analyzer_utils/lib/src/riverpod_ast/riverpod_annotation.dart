@@ -133,7 +133,14 @@ class RiverpodAnnotation extends RiverpodAst {
           continue;
         }
 
-        if (dependency is! SimpleIdentifier) {
+        // Analyzer >=10.2 rewrites class/type-alias identifiers in list
+        // literals into TypeLiteral nodes during resolution. Accept both.
+        Element? dependencyElement;
+        if (dependency is SimpleIdentifier) {
+          dependencyElement = dependency.element;
+        } else if (dependency is TypeLiteral) {
+          dependencyElement = dependency.type.element;
+        } else {
           errorReporter?.call(
             RiverpodAnalysisError(
               'Only elements annotated with @riverpod are supported as "dependencies".',
@@ -143,7 +150,6 @@ class RiverpodAnnotation extends RiverpodAst {
           continue;
         }
 
-        final dependencyElement = dependency.element;
         if (dependencyElement is TopLevelFunctionElement) {
           final dependencyProvider = FunctionalProviderDeclarationElement.parse(
             dependencyElement,
