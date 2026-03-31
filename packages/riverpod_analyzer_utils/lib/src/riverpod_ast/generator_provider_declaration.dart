@@ -198,7 +198,7 @@ class ClassBasedProviderDeclaration extends GeneratorProviderDeclaration {
     final riverpodAnnotation = RiverpodAnnotation._parse(node);
     if (riverpodAnnotation == null) return null;
 
-    final buildMethod = node.members
+    final buildMethod = (node.body as BlockClassBody).members
         .whereType<MethodDeclaration>()
         .firstWhereOrNull((method) => method.name.lexeme == 'build');
     if (buildMethod == null) {
@@ -229,7 +229,7 @@ class ClassBasedProviderDeclaration extends GeneratorProviderDeclaration {
 
     final valueTypeNode = _getValueType(createdTypeNode, element.library);
     final classBasedProviderDeclaration = ClassBasedProviderDeclaration._(
-      name: node.name,
+      name: node.namePart.typeName,
       node: node,
       buildMethod: buildMethod,
       providerElement: providerElement,

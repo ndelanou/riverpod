@@ -1,12 +1,8 @@
 dependency_overrides:
-  # custom_lint_core 0.8.2 pins analyzer ^9, but TypeChecker works fine with 10
-  analyzer: ^10.0.0
-  # dart_style 3.1.7 is the last version supporting analyzer 10
+  # custom_lint_core 0.8.2 pins analyzer ^9, but TypeChecker works fine with 11
+  analyzer: ^11.0.0
+  # dart_style 3.1.7 is the last version supporting analyzer 10/11
   dart_style: 3.1.7
-  flutter_riverpod:
-    path: ../flutter_riverpod
-  hooks_riverpod:
-    path: ../hooks_riverpod
   riverpod:
     path: ../riverpod
   riverpod_annotation:

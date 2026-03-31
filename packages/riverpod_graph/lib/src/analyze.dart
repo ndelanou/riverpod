@@ -476,7 +476,8 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
                 ?.node;
             if (classDeclaration is ClassDeclaration) {
               // firstWhereOrNull required if a class was created with .new
-              final buildMethod = classDeclaration.members
+              final buildMethod = (classDeclaration.body as BlockClassBody)
+                  .members
                   .whereType<MethodDeclaration>()
                   .firstWhereOrNull(
                     (method) => method.name.lexeme == 'build',

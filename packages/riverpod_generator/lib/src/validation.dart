@@ -19,7 +19,7 @@ void validateClassBasedProvider(ClassBasedProviderDeclaration provider) {
       .firstWhere((e) => e?.isDefaultConstructor ?? false, orElse: () => null);
   if (constructor == null) {
     throw InvalidGenerationSourceError(
-      'The class ${provider.node.name} must have a default constructor.',
+      'The class ${provider.node.namePart.typeName} must have a default constructor.',
       element: classElement,
     );
   }
@@ -27,7 +27,7 @@ void validateClassBasedProvider(ClassBasedProviderDeclaration provider) {
   // Assert that the default constructor can be called with no parameter
   if (constructor.formalParameters.any((e) => e.isRequired)) {
     throw InvalidGenerationSourceError(
-      'The default constructor of ${provider.node.name} must have not have required parameters.',
+      'The default constructor of ${provider.node.namePart.typeName} must have not have required parameters.',
       element: constructor,
     );
   }
