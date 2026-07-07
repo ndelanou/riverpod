@@ -102,7 +102,7 @@ abstract class ProviderElementBase<StateT> implements Ref<StateT>, Node {
   var _didCancelOnce = false;
 
   /// Whether the element was disposed or not
-  @internal
+  @override
   bool get mounted => _mounted;
   bool _mounted = false;
 

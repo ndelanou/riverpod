@@ -15,6 +15,19 @@ abstract class Ref<
   /// The [ProviderContainer] that this provider is associated with.
   ProviderContainer get container;
 
+  /// Whether this [Ref] is currently usable.
+  ///
+  /// `true` while the provider is active; `false` once its [onDispose]
+  /// listeners have run — either because the provider was disposed, or while
+  /// it is being recomputed (it becomes `true` again when the next build
+  /// starts).
+  ///
+  /// Useful to guard state writes in asynchronous callbacks that may outlive
+  /// the provider.
+  ///
+  /// Backport of `Ref.mounted` from Riverpod 3.0.
+  bool get mounted;
+
   /// {@template riverpod.refresh}
   /// Forces a provider to re-evaluate its state immediately, and return the created value.
   ///
