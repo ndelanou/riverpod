@@ -188,6 +188,14 @@ mixin ElementWithFuture<StateT, ValueT> on ProviderElement<StateT, ValueT> {
   void onCancel() {
     super.onCancel();
 
+    // Do not pause the subscription while `provider.future` is still awaiting
+    // its first value. Pausing here suspends the underlying Stream before it
+    // emits, so `onData` never fires and the future can never complete —
+    // causing `ref.read(streamProvider.future)` (which retains no listener) to
+    // hang forever. See https://github.com/rrousselGit/riverpod/issues/4671.
+    // The steady-state pause behaviour (after a value is emitted) is preserved.
+    if (_futureCompleter != null) return;
+
     _cancelSubscription?.pause?.call();
   }
 

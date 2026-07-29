@@ -1,3 +1,11 @@
+## Unreleased fix
+
+- Stream-based providers are no longer paused while `provider.future` is still
+  awaiting its first value. Previously, reading such a provider via
+  `ref.read(streamProvider.future)` (which retains no listener) paused the
+  underlying stream before it emitted, so the future never completed and the
+  read hung forever (https://github.com/rrousselGit/riverpod/issues/4671).
+
 ## 3.4.2 - 2026-07-28
 
 Fix a different source of `markNeedsBuild` error. Those are tricky!

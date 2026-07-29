@@ -114,6 +114,22 @@ void main() {
       verifyNoMoreInteractions(onSubPause);
     });
 
+    test(
+      'reading `.future` without a listener does not pause the stream (regression #4671)',
+      () async {
+        // `ref.read(provider.future)` retains no listener, so the element goes
+        // inactive right after the read. It must not pause the still-loading
+        // stream, otherwise the first value is never emitted and the read
+        // hangs forever. See https://github.com/rrousselGit/riverpod/issues/4671
+        final container = ProviderContainer.test();
+        final provider = factory.simpleTestProvider<int>(
+          (ref, _) => Stream.value(0),
+        );
+
+        await expectLater(container.read(provider.future), completion(0));
+      },
+    );
+
     test('keeps post-await dependencies alive during rebuild', () async {
       final container = ProviderContainer.test();
       var dependencyDisposeCount = 0;
