@@ -25,7 +25,7 @@ abstract class ParserGenerator<AnnotationT>
       throwOnUnresolved: false,
     )) {
       firstAnnotatedElementFromUniqueSource.putIfAbsent(
-        annotated.element.library!.uri,
+        annotated.element.firstFragment.libraryFragment!.source.uri,
         () => annotated.element,
       );
     }

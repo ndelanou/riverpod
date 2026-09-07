@@ -51,9 +51,9 @@ class ProviderOverrideList extends RiverpodAst {
     required this.overrides,
   });
 
-  static ProviderOverrideList? _parse(NamedExpression? expression) {
+  static ProviderOverrideList? _parse(NamedArgument? expression) {
     if (expression == null) return null;
-    final expressionValue = expression.expression;
+    final expressionValue = expression.argumentExpression;
 
     List<ProviderOverrideExpression>? overrides;
     if (expressionValue is ListLiteral) {
@@ -72,7 +72,7 @@ class ProviderOverrideList extends RiverpodAst {
     return providerOverrideList;
   }
 
-  final NamedExpression node;
+  final NamedArgument node;
   final List<ProviderOverrideExpression>? overrides;
 
   @override

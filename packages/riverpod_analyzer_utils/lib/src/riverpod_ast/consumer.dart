@@ -38,7 +38,7 @@ class ConsumerWidgetDeclaration extends ConsumerDeclaration {
     ClassDeclaration node,
     _ParseRefInvocationMixin parent,
   ) {
-    final buildMethod = node.members
+    final buildMethod = node.body.members
         .whereType<MethodDeclaration>()
         .firstWhereOrNull((e) => e.name.lexeme == 'build');
 
@@ -135,7 +135,7 @@ class HookConsumerWidgetDeclaration extends ConsumerDeclaration {
     ClassDeclaration node,
     _ParseRefInvocationMixin parent,
   ) {
-    final buildMethod = node.members
+    final buildMethod = node.body.members
         .whereType<MethodDeclaration>()
         .firstWhereOrNull((e) => e.name.lexeme == 'build');
 

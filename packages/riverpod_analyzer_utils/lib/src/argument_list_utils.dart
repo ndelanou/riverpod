@@ -6,11 +6,11 @@ import 'package:meta/meta.dart';
 extension ArgumentListUtils on ArgumentList {
   /// Lists the positional arguments of an argument list.
   Iterable<Expression> positionalArguments() {
-    return arguments.where((e) => e is! NamedExpression);
+    return arguments.whereType<Expression>();
   }
 
   /// Lists the named arguments of an argument list.
-  Iterable<NamedExpression> namedArguments() {
-    return arguments.whereType<NamedExpression>();
+  Iterable<NamedArgument> namedArguments() {
+    return arguments.whereType<NamedArgument>();
   }
 }

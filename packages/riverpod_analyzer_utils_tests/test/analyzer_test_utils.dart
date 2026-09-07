@@ -43,6 +43,8 @@ void testSource(
       };
 
       String? generated;
+      // build_runner >=2.15 only exposes the given inputs to the resolver.
+      // Read the dependency sources so that package imports resolve.
       if (runGenerator) {
         final analysisResult = await resolveSources(
           {
@@ -54,33 +56,38 @@ void testSource(
               ignoreErrors: true,
             );
           },
+          readAllSourcesFromFilesystem: true,
         );
         generated = RiverpodGenerator(const {}).runGenerator(analysisResult);
       }
 
-      await resolveSources({
-        '$packageName|lib/foo.dart': sourceWithLibrary,
-        if (generated != null)
-          '$packageName|lib/foo.g.dart': 'part of "foo.dart";$generated',
-        ...otherSources,
-      }, (resolver) async {
-        try {
-          final originalZone = Zone.current;
-          return runZoned(
-            () => run(resolver),
-            zoneSpecification: ZoneSpecification(
-              // Somehow prints are captured inside the callback. Let's restore them
-              print: (self, parent, zone, line) => enclosingZone.print(line),
-              handleUncaughtError: (self, parent, zone, error, stackTrace) {
-                originalZone.handleUncaughtError(error, stackTrace);
-                enclosingZone.handleUncaughtError(error, stackTrace);
-              },
-            ),
-          );
-        } catch (err, stack) {
-          enclosingZone.handleUncaughtError(err, stack);
-        }
-      });
+      await resolveSources(
+        {
+          '$packageName|lib/foo.dart': sourceWithLibrary,
+          if (generated != null)
+            '$packageName|lib/foo.g.dart': 'part of "foo.dart";$generated',
+          ...otherSources,
+        },
+        (resolver) async {
+          try {
+            final originalZone = Zone.current;
+            return runZoned(
+              () => run(resolver),
+              zoneSpecification: ZoneSpecification(
+                // Somehow prints are captured inside the callback. Let's restore them
+                print: (self, parent, zone, line) => enclosingZone.print(line),
+                handleUncaughtError: (self, parent, zone, error, stackTrace) {
+                  originalZone.handleUncaughtError(error, stackTrace);
+                  enclosingZone.handleUncaughtError(error, stackTrace);
+                },
+              ),
+            );
+          } catch (err, stack) {
+            enclosingZone.handleUncaughtError(err, stack);
+          }
+        },
+        readAllSourcesFromFilesystem: true,
+      );
     },
   );
 }
@@ -157,7 +164,7 @@ extension ResolverX on Resolver {
           await library.session.getErrors('/test_lib/lib/foo.dart');
       errorResult as ErrorsResult;
 
-      final errors = errorResult.errors
+      final errors = errorResult.diagnostics
           // Infos are only recommendations. There's no reason to fail just for this
           .where((e) => e.severity != Severity.info)
           .toList();
@@ -699,8 +706,8 @@ extension TakeList<T extends ProviderDeclaration> on List<T> {
 
 extension LibraryElementX on LibraryElement {
   Element findElementWithName(String name) {
-    return topLevelElements.singleWhere(
-      (element) => !element.isSynthetic && element.name == name,
+    return children.singleWhere(
+      (element) => element.nonSynthetic == element && element.name == name,
       orElse: () => throw StateError('No element found with name "$name"'),
     );
   }

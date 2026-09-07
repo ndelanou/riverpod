@@ -24,7 +24,7 @@ class ProviderWidget<T> extends ConsumerWidget {
 
     final consumerWidget = result.consumerWidgetDeclarations.single;
     expect(consumerWidget, isA<ConsumerWidgetDeclaration>());
-    expect(consumerWidget.node.name.toString(), 'ProviderWidget');
+    expect(consumerWidget.node.namePart.typeName.lexeme, 'ProviderWidget');
     expect(
       consumerWidget.buildMethod!.toSource(),
       '@override Widget build(BuildContext context, WidgetRef ref) {ref.watch(provider); return Container();}',
@@ -73,7 +73,7 @@ class MyConsumerWidget extends ConsumerWidget {
 
     final consumerWidget = result.consumerWidgetDeclarations.single;
     expect(consumerWidget, isA<ConsumerWidgetDeclaration>());
-    expect(consumerWidget.node.name.toString(), 'MyConsumerWidget');
+    expect(consumerWidget.node.namePart.typeName.lexeme, 'MyConsumerWidget');
     expect(
       consumerWidget.buildMethod!.toSource(),
       '@override Widget build(BuildContext context, WidgetRef ref) {ref.watch(provider); return Container();}',
@@ -111,7 +111,7 @@ class MyConsumerWidget extends HookConsumerWidget {
 
     final consumerWidget = result.hookConsumerWidgetDeclaration.single;
     expect(consumerWidget, isA<HookConsumerWidgetDeclaration>());
-    expect(consumerWidget.node.name.toString(), 'MyConsumerWidget');
+    expect(consumerWidget.node.namePart.typeName.lexeme, 'MyConsumerWidget');
     expect(
       consumerWidget.buildMethod!.toSource(),
       '@override Widget build(BuildContext context, WidgetRef ref) {ref.watch(provider); return Container();}',
@@ -164,10 +164,10 @@ class MyConsumerState extends ConsumerState<MyConsumerWidget> {
     final consumerState = result.consumerStateDeclarations.single;
 
     expect(consumerWidget, isA<ConsumerStatefulWidgetDeclaration>());
-    expect(consumerWidget.node.name.toString(), 'MyConsumerWidget');
+    expect(consumerWidget.node.namePart.typeName.lexeme, 'MyConsumerWidget');
 
     expect(consumerState, isA<ConsumerStateDeclaration>());
-    expect(consumerState.node.name.toString(), 'MyConsumerState');
+    expect(consumerState.node.namePart.typeName.lexeme, 'MyConsumerState');
 
     expect(
       result.resolvedRiverpodLibraryResults.single.unknownWidgetRefInvocations,
@@ -222,10 +222,10 @@ class MyConsumerState extends ConsumerState<MyConsumerWidget> {
     final consumerState = result.consumerStateDeclarations.single;
 
     expect(consumerWidget, isA<StatefulHookConsumerWidgetDeclaration>());
-    expect(consumerWidget.node.name.toString(), 'MyConsumerWidget');
+    expect(consumerWidget.node.namePart.typeName.lexeme, 'MyConsumerWidget');
 
     expect(consumerState, isA<ConsumerStateDeclaration>());
-    expect(consumerState.node.name.toString(), 'MyConsumerState');
+    expect(consumerState.node.namePart.typeName.lexeme, 'MyConsumerState');
 
     expect(
       result.resolvedRiverpodLibraryResults.single.unknownWidgetRefInvocations,

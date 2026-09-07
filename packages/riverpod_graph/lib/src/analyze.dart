@@ -366,7 +366,7 @@ class ConsumerWidgetVisitor extends RecursiveAstVisitor<void> {
         targetTypeElement != null &&
         targetTypeElement.isFromRiverpod) {
       final providerExpression = node.argumentList.arguments.firstOrNull;
-      if (providerExpression == null) return;
+      if (providerExpression is! Expression) return;
 
       final consumedProvider = parseProviderFromExpression(providerExpression);
       switch (node.methodName.name) {
@@ -443,9 +443,7 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
         // final providerSimpleIdentifier = Provider(myMethod); // Simple identifier.
         // final providerConstructorReference= Provider(MyClass.new); // Constructor reference.
         // ```
-        final firstArgument = node.arguments.firstWhere(
-          (argument) => argument is! NamedExpression,
-        );
+        final firstArgument = node.arguments.whereType<Expression>().first;
         if (firstArgument is SimpleIdentifier) {
           // The created provider is referencing a method defined somewhere else:
           // ```dart
@@ -453,9 +451,8 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
           // ```
           final element = firstArgument.element;
           if (element != null) {
-            final functionDeclaration = unit
-                .getFragmentDeclaration(element.firstFragment)
-                ?.node;
+            final functionDeclaration =
+                unit.getFragmentDeclaration(element.firstFragment)?.node;
             if (functionDeclaration is FunctionDeclaration) {
               // Instead of continuing with the current node, we visit the one of
               // the referenced method.
@@ -471,12 +468,11 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
           final constructorElement = firstArgument.constructorName.element;
           if (constructorElement != null) {
             final returnElement = constructorElement.returnType.element;
-            final classDeclaration = unit
-                .getFragmentDeclaration(returnElement.firstFragment)
-                ?.node;
+            final classDeclaration =
+                unit.getFragmentDeclaration(returnElement.firstFragment)?.node;
             if (classDeclaration is ClassDeclaration) {
               // firstWhereOrNull required if a class was created with .new
-              final buildMethod = classDeclaration.members
+              final buildMethod = classDeclaration.body.members
                   .whereType<MethodDeclaration>()
                   .firstWhereOrNull(
                     (method) => method.name.lexeme == 'build',
@@ -520,9 +516,7 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
       }
 
       if (isFromRiverpodOrExtendsRiverpod) {
-        final firstArgument = node.arguments.firstWhere(
-          (argument) => argument is! NamedExpression,
-        );
+        final firstArgument = node.arguments.whereType<Expression>().first;
         if (firstArgument is FunctionExpression &&
             firstArgument.body is ExpressionFunctionBody) {
           final bodyExpression =
@@ -560,7 +554,8 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
                 final classType =
                     bodyExpression.target.staticType! as InterfaceType;
                 if (classType.methods.any(
-                  (method) => method.name == 'build' && method.metadata.hasOverride,
+                  (method) =>
+                      method.name == 'build' && method.metadata.hasOverride,
                 )) {
                   // The logic is implemented in an overridden `build` method.
                   // ```dart
@@ -627,8 +622,9 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
               (callMethod.returnType as InterfaceType)
                   .constructors
                   .firstWhere(isUnnamedConstructor);
-          final newNode =
-              unit.getFragmentDeclaration(unnamedConstructorElement.firstFragment)?.node;
+          final newNode = unit
+              .getFragmentDeclaration(unnamedConstructorElement.firstFragment)
+              ?.node;
           // We visit the node of the unnamed constructor and continue in
           // `visitArgumentList`.
           return newNode?.visitChildren(this);
@@ -648,7 +644,7 @@ class ProviderDependencyVisitor extends RecursiveAstVisitor<void> {
         targetTypeElement != null &&
         targetTypeElement.isFromRiverpod) {
       final providerExpression = node.argumentList.arguments.firstOrNull;
-      if (providerExpression == null) return;
+      if (providerExpression is! Expression) return;
 
       final consumedProvider = parseProviderFromExpression(providerExpression);
       switch (node.methodName.name) {
@@ -739,8 +735,7 @@ VariableElement parseProviderFromExpression(
 ) {
   if (providerExpression is PropertyAccess) {
     final element = providerExpression.propertyName.element;
-    if (element is PropertyAccessorElement &&
-        !element.library.isFromRiverpod) {
+    if (element is PropertyAccessorElement && !element.library.isFromRiverpod) {
       // watch(SampleClass.familyProviders(id))
       return element.baseElement.variable;
     }

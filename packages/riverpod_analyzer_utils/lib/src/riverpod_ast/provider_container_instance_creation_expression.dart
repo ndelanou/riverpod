@@ -17,7 +17,7 @@ class ProviderContainerInstanceCreationExpression extends RiverpodAst {
 
     final overrides = node.argumentList
         .namedArguments()
-        .firstWhereOrNull((e) => e.name.label.name == 'overrides');
+        .firstWhereOrNull((e) => e.name.lexeme == 'overrides');
 
     return ProviderContainerInstanceCreationExpression._(
       node: node,

@@ -24,7 +24,7 @@ class RiverpodAnnotationDependencies extends RiverpodAst {
     required this.dependencies,
   });
 
-  final NamedExpression node;
+  final NamedArgument node;
   final List<RiverpodAnnotationDependency>? dependencies;
 
   @override
@@ -70,13 +70,13 @@ class RiverpodAnnotation extends RiverpodAst {
       final dartObject = elementAnnotation.computeConstantValue();
       if (dartObject == null) return null;
 
-      NamedExpression? keepAliveNode;
-      NamedExpression? dependenciesNode;
+      NamedArgument? keepAliveNode;
+      NamedArgument? dependenciesNode;
       final argumentList = annotation.arguments;
       if (argumentList != null) {
         for (final argument
-            in argumentList.arguments.whereType<NamedExpression>()) {
-          switch (argument.name.label.name) {
+            in argumentList.arguments.whereType<NamedArgument>()) {
+          switch (argument.name.lexeme) {
             case 'keepAlive':
               keepAliveNode = argument;
             case 'dependencies':
@@ -106,10 +106,10 @@ class RiverpodAnnotation extends RiverpodAst {
   }
 
   static RiverpodAnnotationDependencies? _parseDependencies(
-    NamedExpression? dependenciesNode,
+    NamedArgument? dependenciesNode,
   ) {
     if (dependenciesNode == null) return null;
-    final dependenciesNodeValue = dependenciesNode.expression;
+    final dependenciesNodeValue = dependenciesNode.argumentExpression;
     // TODO handle Riverpod(dependencies:null)
 
     final dependencies = <RiverpodAnnotationDependency>[];
@@ -217,7 +217,7 @@ class RiverpodAnnotation extends RiverpodAst {
 
   final Annotation annotation;
   final RiverpodAnnotationElement element;
-  final NamedExpression? keepAliveNode;
+  final NamedArgument? keepAliveNode;
   final RiverpodAnnotationDependencies? dependencies;
 
   @override

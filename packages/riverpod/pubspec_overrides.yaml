@@ -1,5 +1,0 @@
-dependency_overrides:
-  # necessary for mockito
-  analyzer: ^10.0.0
-  # dart_style 3.1.7 is the last version supporting analyzer 10
-  dart_style: 3.1.7

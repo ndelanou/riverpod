@@ -6,10 +6,10 @@ class LegacyProviderDependencies extends RiverpodAst {
     required this.dependenciesNode,
   });
 
-  static LegacyProviderDependencies? _parse(NamedExpression? dependenciesNode) {
+  static LegacyProviderDependencies? _parse(NamedArgument? dependenciesNode) {
     if (dependenciesNode == null) return null;
 
-    final value = dependenciesNode.expression;
+    final value = dependenciesNode.argumentExpression;
 
     List<LegacyProviderDependency>? dependencies;
     if (value is ListLiteral) {
@@ -29,7 +29,7 @@ class LegacyProviderDependencies extends RiverpodAst {
   }
 
   final List<LegacyProviderDependency>? dependencies;
-  final NamedExpression dependenciesNode;
+  final NamedArgument dependenciesNode;
 
   @override
   void accept(RiverpodAstVisitor visitor) {
@@ -162,7 +162,7 @@ class LegacyProviderDeclaration extends RiverpodAst
 
     final dependenciesElement = arguments
         .namedArguments()
-        .firstWhereOrNull((e) => e.name.label.name == 'dependencies');
+        .firstWhereOrNull((e) => e.name.lexeme == 'dependencies');
     final dependencies = LegacyProviderDependencies._parse(dependenciesElement);
 
     final legacyProviderDeclaration = LegacyProviderDeclaration._(
