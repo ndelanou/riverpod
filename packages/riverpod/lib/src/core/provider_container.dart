@@ -379,11 +379,10 @@ class ProviderPointerManager {
             previousPointer
               ..familyOverride = override
               ..targetContainer = container
-                  // Remove inherited family values and keep only local ones
-                  ..pointers
-                  .removeWhere(
-                    (key, value) => value.targetContainer != container,
-                  );
+              // Remove inherited family values and keep only local ones
+              ..pointers.removeWhere(
+                (key, value) => value.targetContainer != container,
+              );
             continue;
           }
 
@@ -895,11 +894,14 @@ final class ProviderContainer implements MutationTarget {
     List<ProviderObserver>? observers,
     @internal void Function(Object error, StackTrace stackTrace)? onError,
     Retry? retry,
+    bool? keepFutureReadsActive,
   }) : _debugOverridesLength = overrides.length,
        _depth = parent == null ? 0 : parent._depth + 1,
        _parent = parent,
        _onError = onError ?? Zone.current.handleUncaughtError,
        retry = retry ?? parent?.retry,
+       keepFutureReadsActive =
+           keepFutureReadsActive ?? parent?.keepFutureReadsActive ?? false,
        observers = [
          ...?observers,
          if (kDebugMode && parent == null) const DevtoolObserver(),
@@ -965,12 +967,14 @@ final class ProviderContainer implements MutationTarget {
     List<Override> overrides = const [],
     List<ProviderObserver>? observers,
     Retry? retry,
+    bool? keepFutureReadsActive,
   }) {
     final container = ProviderContainer(
       parent: parent,
       overrides: overrides,
       observers: observers,
       retry: retry,
+      keepFutureReadsActive: keepFutureReadsActive,
     );
     test.addTearDown(container.dispose);
 
@@ -1015,6 +1019,28 @@ final class ProviderContainer implements MutationTarget {
   ///
   /// {@macro riverpod.retry}
   final Retry? retry;
+
+  /// {@template riverpod.keep_future_reads_active}
+  /// Whether a [read] that returns a [Future] keeps the provider active until
+  /// that future completes. Defaults to `false`, inherited from the parent
+  /// container when not specified.
+  ///
+  /// A [read] listens to the provider, then stops listening at once. A
+  /// provider without listeners is paused: a stream provider pauses its
+  /// stream, and the providers it listens to are paused in turn. So by
+  /// default, `await container.read(provider.future)` never completes if the
+  /// provider, or a provider it waits for, is a stream provider that did not
+  /// emit yet. Auto-dispose providers are also disposed before they emit.
+  ///
+  /// When `true`, [read] keeps its subscription until the [Future] completes,
+  /// as if the caller listened to the provider while it waits. This applies to
+  /// [Ref.read] and `WidgetRef.read` too, which use [read]. Reads that do not
+  /// return a [Future] are not affected.
+  ///
+  /// A future that never completes keeps the provider active for the
+  /// lifetime of the container.
+  /// {@endtemplate}
+  final bool keepFutureReadsActive;
 
   /// How deep this [ProviderContainer] is in the graph of containers.
   ///
@@ -1067,10 +1093,22 @@ final class ProviderContainer implements MutationTarget {
   StateT read<StateT>(ProviderListenable<StateT> provider) {
     final sub = listen(provider, (_, _) {});
 
+    var closeNow = true;
     try {
-      return sub.readSafe().valueOrProviderException;
+      final result = sub.readSafe().valueOrProviderException;
+
+      if (keepFutureReadsActive && result is Future<Object?>) {
+        // See [keepFutureReadsActive].
+        closeNow = false;
+        result.then<void>(
+          (_) => sub.close(),
+          onError: (Object _) => sub.close(),
+        );
+      }
+
+      return result;
     } finally {
-      sub.close();
+      if (closeNow) sub.close();
     }
   }
 

@@ -77,6 +77,7 @@ final class ProviderScope extends StatefulWidget {
     this.overrides = const [],
     this.observers,
     this.retry,
+    this.keepFutureReadsActive,
     required this.child,
   });
 
@@ -113,6 +114,9 @@ final class ProviderScope extends StatefulWidget {
   /// See [ProviderContainer.defaultRetry] for information about the
   /// default retry logic.
   final Retry? retry;
+
+  /// {@macro riverpod.keep_future_reads_active}
+  final bool? keepFutureReadsActive;
 
   /// The part of the widget tree that can use Riverpod and has overridden providers.
   final Widget child;
@@ -163,6 +167,7 @@ final class ProviderScopeState extends State<ProviderScope> {
       overrides: widget.overrides,
       observers: widget.observers,
       retry: widget.retry,
+      keepFutureReadsActive: widget.keepFutureReadsActive,
       onError: (err, stack) {
         FlutterError.reportError(
           FlutterErrorDetails(

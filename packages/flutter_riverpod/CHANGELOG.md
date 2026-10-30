@@ -1,3 +1,8 @@
+## Unreleased minor
+
+- Added `ProviderScope.keepFutureReadsActive`, passed to its `ProviderContainer`.
+  See `ProviderContainer.keepFutureReadsActive`.
+
 ## 3.4.3 - 2026-09-04
 ### Dependency changes
 

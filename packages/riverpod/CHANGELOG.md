@@ -1,3 +1,13 @@
+## Unreleased minor
+
+- Added `ProviderContainer(keepFutureReadsActive: true)`, an opt-in setting.
+  A `read` that returns a `Future` (`provider.future`, `provider.selectAsync(...)`)
+  then keeps the provider active until that future completes.
+  By default, `read` stops listening at once: the provider is paused, so a
+  stream provider that did not emit yet never completes its future
+  (riverpod#4671), and an auto-dispose provider is disposed before it emits.
+  Child containers inherit the setting. `Ref.read` and `WidgetRef.read` use it too.
+
 ## 3.4.3 - 2026-09-04
 
 - Upgraded `analyzer` to `<15.0.0`
